@@ -1,4 +1,3 @@
-
 <?php 
 session_start();
 if(empty($_SESSION['user_id'])){
@@ -10,35 +9,53 @@ window.location.assign('index.php');
 }
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riwayat Permintaan</title>
+
 </head>
 <body>
-<div><?php include'navbar.php';?></div>
+    <div class="navbar"><?php include'navbar.php';?></div>
 <br>
 <center><div class="judul-berita">Riwayat Permintaan</div></center>
-
 <?php
-$sql = "SELECT * FROM user";
-$result = $conn->query($sql);
+$mysqli = new mysqli("localhost","root","","peduli_bersih");
+
+if ($mysqli -> connect_errno) {
+  echo "Failed to connect to MySQL: " . $mysqli -> connect_error;
+  exit();
+}
+
+$sql = "SELECT p.id_permintaan, p.tgl_permintaan, u.user_nama, p.status_permintaan FROM permintaan p INNER JOIN user u ON p.user_id = u.user_id WHERE p.status_permintaan IN ('menunggu', 'diproses', 'selesai')";
+$result = $mysqli -> query($sql);
 
 if ($result->num_rows > 0) {
-    echo "<table><tr><th>ID</th><th>Permission</th><th>Date</th><th>Location</th><th>Coordinates</th><th>Status</th><th>User ID</th><th>Action</th></tr>";
+    echo "<center><table style='border-collapse: collapse; width: 90%;'><tr style='background-color: brown;'><th style='border: 1px solid black; padding: 10px; text-align: center;'>ID</th><th style='border: 1px solid black; padding: 10px; text-align: center;'>Date</th><th style='border: 1px solid black; padding: 10px; text-align: center;'>User Name</th><th style='border: 1px solid black; padding: 10px; text-align: center;'>Status</th><th style='border: 1px solid black; padding: 10px; text-align: center;'>Action</th></tr>";
     // output data of each row
     while($row = $result->fetch_assoc()) {
-        echo "<tr><td>".$row["id"]."</td><td>".$row["permission"]."</td><td>".$row["date"]."</td><td>".$row["location"]."</td><td>".$row["coordinates"]."</td><td>".$row["status"]."</td><td>".$row["user_id"]."</td>";
-        echo "<td><button type='button'>Action</button></td></tr>";
+        $statusColor = '';
+        if ($row["status_permintaan"] == 'menunggu') {
+            $statusColor = 'Orange';
+        } elseif ($row["status_permintaan"] == 'diproses') {
+            $statusColor = 'lightblue';
+        } elseif ($row["status_permintaan"] == 'selesai') {
+            $statusColor = 'limegreen';
+        }
+        echo "<tr><td style='border: 1px solid black; padding: 10px; text-align: center;'>".$row["id_permintaan"]."</td><td style='border: 1px solid black; padding: 10px; text-align: center;'>".$row["tgl_permintaan"]."</td><td style='border: 1px solid black; padding: 10px; text-align: center;'>".$row["user_nama"]."</td><td style='border: 1px solid black; padding: 10px; text-align: center; background-color: ".$statusColor.";'>".$row["status_permintaan"]."</td>";
+        echo "<td style='border: 1px solid black; padding: 10px; text-align: center;'><button type='button'>Action</button></td></tr>";
     }
-    echo "</table>";
+    echo "</table></center>";
 } else {
-    echo "0 results";
+    echo "Tidak Ada Permintaan Baru";
 }
+
+$result -> free_result();
+$mysqli -> close();
 ?>
 
-<br>
 </body>
 </html>
