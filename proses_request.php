@@ -27,48 +27,52 @@
 <body>
 
 <?php
+// Enable error reporting
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Database connection
+    include 'koneksi.php';
 
-session_start();
-$user_id = $_SESSION ['user_id'];
-$asal_foto = $_FILES['foto']['tmp_name'];
-$nama_foto = $_FILES['foto']['name'];
-$folder = "foto";
-$detail_permintaan = $_POST['detail_permintaan'];
-$alamat_permintaan = $_POST['alamat_permintaan'];
-$coordinates = $_POST['coordinates'];
-$tgl_permintaan = $_POST['tgl_permintaan'];
-$status_permintaan = 'belum';
+    // Form data
+    $detail_permintaan = $_POST['detail_permintaan'];
+    $alamat_permintaan = $_POST['alamat_permintaan'];
+    $coordinates = $_POST['coordinates'];
+    $tgl_permintaan = $_POST['tgl_permintaan'];
 
-if(move_uploaded_file($asal_foto, $folder.'/'.$nama_foto)) {
+    // File upload
+    $foto_permintaan = [];
+    for ($i = 0; $i < count($_FILES['foto_permintaan']['name']); $i++) {
+        $tmp_name = $_FILES['foto_permintaan']['tmp_name'][$i];
+        $name = $_FILES['foto_permintaan']['name'][$i];
+        $folder = "foto";
 
-include 'koneksi.php';
-$sql = "INSERT INTO permintaan(user_id,foto,detail_permintaan,alamat_permintaan,coodinates,tgl_permintaan,status_permintaan)
-VALUES('$user_id','$nama_foto','$detail_permintaan','$alamat_permintaan','$coordinates','$tgl_permintaan','$status_permintaan')";
+        if (move_uploaded_file($tmp_name, $folder.'/'.$name)) {
+            $foto_permintaan[] = $name;
+        } else {
+            echo "Failed to upload file: " . $name;
+            exit;
+        }
+    }
 
-if(mysqli_query($koneksi, $sql)) {
-    echo"
-    <script>
-        peringatan5();
-    </script>";
+    // Convert the array of filenames to a string
+    $foto_permintaan = implode(",", $foto_permintaan);
 
+    // SQL query
+    $sql = "INSERT INTO permintaan(detail_permintaan, foto_permintaan, alamat_permintaan, coordinates, tgl_permintaan)
+            VALUES('$detail_permintaan', '$foto_permintaan', '$alamat_permintaan', '$coordinates', '$tgl_permintaan')";
 
-} else {
-
-    print mysqli_error($koneksi); 
-
+    // Execute the query
+    if (mysqli_query($koneksi, $sql)) {
+        echo "Data inserted successfully";
+    } else {
+        echo "Error: " . mysqli_error($koneksi);
+    }
 }
-
-} else {
-    echo"
-    <script>
-        peringatan4();
-    </script>";
-
-
-}
-
-
 ?>
+
+
 </body>
 </html>
